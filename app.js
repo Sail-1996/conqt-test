@@ -26,38 +26,29 @@ db.connect((err) => {
 
 
 app.get("/product_details/:id", (req, res) => {
-
-    //   page, page size, order by, order direction, and search by field.
     const id = req.params.id
 
-
-    console.log(id)
-   
    const header = res.pa
        db.query(`SELECT * FROM Products WHERE productId LIKE ${id}`, (err, results) => {
            if (err) return res.status(500).json({ error: err.message });
            res.json(results);
          });
    })
-
-
    app.post("/products", (req, res) => {
     const body = req.body;
-
     // Default parameters
     const pageSize = body.pageSize ?? 10;
     const currentPage = body.currentPage ?? 1;
     const orderBy = body.orderBy ?? "createdAt";
-    const orderDir = body.orderDir?.toLowerCase() === "asc" ? "ASC" : "DESC"; // Ensure valid direction
+    const orderDir = body.orderDir?.toLowerCase() === "asc" ? "ASC" : "DESC"; 
     const searchBy = body.searchBy ?? "";
     const searchFields = body.searchFields ?? [];
 
-    // Validate inputs
+   
     if (currentPage < 1 || pageSize < 1) {
         return res.status(400).json({ error: "Invalid pagination parameters" });
     }
 
-    // Construct WHERE clause for search
     let whereClause = "";
     const params = [];
     if (searchBy && searchFields.length > 0) {
@@ -67,11 +58,8 @@ app.get("/product_details/:id", (req, res) => {
         });
         whereClause = `WHERE ${searchConditions.join(" OR ")}`;
     }
-
-    // Calculate offset for pagination
     const offset = (currentPage - 1) * pageSize;
 
-    // Construct the SQL query
     const query = `
         SELECT * 
         FROM Products 
@@ -80,16 +68,14 @@ app.get("/product_details/:id", (req, res) => {
         LIMIT ? OFFSET ?;
     `;
 
-    // Add pagination parameters
     params.push(pageSize, offset);
 
-    // Execute the query
     db.query(query, params, (err, results) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
 
-        // Count total products for pagination info
+      
         const countQuery = `SELECT COUNT(*) AS total FROM Products ${whereClause}`;
         db.query(countQuery, params.slice(0, -2), (countErr, countResult) => {
             if (countErr) {
